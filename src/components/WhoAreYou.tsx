@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { signInWithGoogle, type AuthState } from "@/lib/auth";
 import { setPendingJoin, type PendingJoin } from "@/lib/identity";
 import { googleSignInEnabled } from "@/lib/supabase";
-import { closeMatch, formatDate } from "@/lib/text";
+import { closeMatch, formatWhen } from "@/lib/text";
 import type { EventData, Participant } from "@/lib/types";
 import type { Run } from "./EventScreen";
 import { BackIcon, GoogleIcon } from "./icons";
@@ -54,7 +54,7 @@ export function WhoAreYou({ data, run, auth }: { data: EventData; run: Run; auth
     }
   }
 
-  const when = [formatDate(event.date), event.location].filter(Boolean).join(" · ");
+  const when = [formatWhen(event.date, event.end_date), event.location].filter(Boolean).join(" · ");
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-[max(2rem,env(safe-area-inset-top))] pb-10">

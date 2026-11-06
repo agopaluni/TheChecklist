@@ -11,6 +11,7 @@ export function NewEventForm() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [start, setStart] = useState("");
 
   async function submit(form: FormData) {
     const name = String(form.get("name") ?? "").trim();
@@ -23,6 +24,7 @@ export function NewEventForm() {
         name,
         creatorName,
         date: String(form.get("date") ?? ""),
+        endDate: String(form.get("end_date") ?? ""),
         location: String(form.get("location") ?? ""),
         note: String(form.get("note") ?? ""),
       });
@@ -71,14 +73,32 @@ export function NewEventForm() {
             autoComplete="given-name"
           />
         </Field>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3">
           <Field label="When" optional>
-            <input name="date" type="date" className="field min-h-[3.2rem]" />
+            <input
+              name="date"
+              type="date"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              className="field min-h-[3.2rem]"
+            />
           </Field>
-          <Field label="Where" optional>
-            <input name="location" maxLength={120} className="field" placeholder="Kirk Creek" />
+          <Field label="Until" optional>
+            <input
+              name="end_date"
+              type="date"
+              min={start || undefined}
+              disabled={!start}
+              className="field min-h-[3.2rem] disabled:opacity-50"
+            />
           </Field>
         </div>
+        <p className="-mt-3 text-sm text-muted">
+          Add an end date for trips and weekends, then give each day its own list.
+        </p>
+        <Field label="Where" optional>
+          <input name="location" maxLength={120} className="field" placeholder="Kirk Creek" />
+        </Field>
         <Field label="Note" optional>
           <textarea
             name="note"

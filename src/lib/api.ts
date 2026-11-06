@@ -15,6 +15,7 @@ const MESSAGES: Record<string, string> = {
   item_taken: "Someone else just took that one.",
   not_yours: "Only the person bringing it can check it off.",
   not_found: "That's gone. It may have just been removed.",
+  bad_day: "That day isn't part of the event any more.",
   no_identity: "Something went wrong saving who you are. Try reloading.",
 };
 
@@ -50,6 +51,7 @@ export const api = {
     name: string;
     creatorName: string;
     date?: string | null;
+    endDate?: string | null;
     location?: string | null;
     note?: string | null;
   }) =>
@@ -57,17 +59,25 @@ export const api = {
       p_name: e.name,
       p_creator_name: e.creatorName,
       p_date: e.date || null,
+      p_end_date: e.endDate || null,
       p_location: e.location || null,
       p_note: e.note || null,
     }),
   updateEvent: (
     eventId: string,
-    e: { name: string; date: string | null; location: string | null; note: string | null },
+    e: {
+      name: string;
+      date: string | null;
+      end_date: string | null;
+      location: string | null;
+      note: string | null;
+    },
   ) =>
     call<void>("update_event", {
       p_event: eventId,
       p_name: e.name,
       p_date: e.date || null,
+      p_end_date: e.end_date || null,
       p_location: e.location,
       p_note: e.note,
     }),
@@ -85,8 +95,15 @@ export const api = {
     call<void>("remove_person", { p_participant: participantId }),
   linkGuestToAccount: () => call<{ linked: number; released: number }>("link_guest_to_account"),
 
-  addItems: (eventId: string, items: NewItem[], assignTo: string | null) =>
-    call<number>("add_items", { p_event: eventId, p_items: items, p_assign_to: assignTo }),
+  addItems: (eventId: string, items: NewItem[], assignTo: string | null, day: string | null) =>
+    call<number>("add_items", {
+      p_event: eventId,
+      p_items: items,
+      p_assign_to: assignTo,
+      p_day: day,
+    }),
+  setItemDay: (itemId: string, day: string | null) =>
+    call<void>("set_item_day", { p_item: itemId, p_day: day }),
   updateItem: (itemId: string, i: { name: string; quantity: string | null; note: string | null }) =>
     call<void>("update_item", {
       p_item: itemId,

@@ -125,11 +125,13 @@ export function EventMenu({
 function EditEvent({ data, run, onDone }: { data: EventData; run: Run; onDone: () => void }) {
   const { event } = data;
   const [busy, setBusy] = useState(false);
+  const [start, setStart] = useState(event.date ?? "");
 
   async function save(form: FormData) {
     const fields = {
       name: String(form.get("name") ?? "").trim(),
       date: String(form.get("date") ?? "") || null,
+      end_date: String(form.get("end_date") ?? "") || null,
       location: String(form.get("location") ?? "").trim() || null,
       note: String(form.get("note") ?? "").trim() || null,
     };
@@ -152,13 +154,30 @@ function EditEvent({ data, run, onDone }: { data: EventData; run: Run; onDone: (
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className="mb-1 block text-sm font-semibold">When</span>
-          <input name="date" type="date" defaultValue={event.date ?? ""} className="field min-h-[3.2rem]" />
+          <input
+            name="date"
+            type="date"
+            value={start}
+            onChange={(e) => setStart(e.target.value)}
+            className="field min-h-[3.2rem]"
+          />
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-semibold">Where</span>
-          <input name="location" defaultValue={event.location ?? ""} maxLength={120} className="field" />
+          <span className="mb-1 block text-sm font-semibold">Until</span>
+          <input
+            name="end_date"
+            type="date"
+            defaultValue={event.end_date ?? ""}
+            min={start || undefined}
+            disabled={!start}
+            className="field min-h-[3.2rem] disabled:opacity-50"
+          />
         </label>
       </div>
+      <label className="block">
+        <span className="mb-1 block text-sm font-semibold">Where</span>
+        <input name="location" defaultValue={event.location ?? ""} maxLength={120} className="field" />
+      </label>
       <label className="block">
         <span className="mb-1 block text-sm font-semibold">Note</span>
         <textarea name="note" defaultValue={event.note ?? ""} rows={3} maxLength={1000} className="field resize-none" />

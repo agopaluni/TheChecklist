@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { api } from "@/lib/api";
 import type { AuthState } from "@/lib/auth";
-import { formatDate } from "@/lib/text";
+import { eventDays, formatDay, formatWhen } from "@/lib/text";
 import type { EventData, Item, Participant } from "@/lib/types";
 import { AddItemsSheet } from "./AddItemsSheet";
 import { AddPersonSheet } from "./AddPersonSheet";
@@ -28,7 +28,7 @@ export function EventView({
   auth: AuthState;
   offline: boolean;
 }) {
-  const { event, participants, items, me } = data;
+  const { event, participants, items: allItems, me } = data;
   const toast = useToast();
   const router = useRouter();
   const isNew = useSearchParams().get("new") === "1";
@@ -37,6 +37,8 @@ export function EventView({
   const [mineOnly, setMineOnly] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addFor, setAddFor] = useState<string | null>(me);
+  const [day, setDay] = useState<string | null>(null); // null = all days
+  const [addDay, setAddDay] = useState<string | null>(null);
   const [addingPerson, setAddingPerson] = useState(false);
   const [itemId, setItemId] = useState<string | null>(null);
   const [personId, setPersonId] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export function EventView({
   function openAdd(assignTo: string | null = addFor) {
     flushSync(() => {
       setAddFor(assignTo);
+      setAddDay(activeDay);
       setAdding(true);
       setPersonId(null);
     });
@@ -56,6 +59,12 @@ export function EventView({
   const people = [...participants].sort((a, b) =>
     a.id === me ? -1 : b.id === me ? 1 : a.created_at.localeCompare(b.created_at),
   );
+  // Multi-day events get a tab per day; a day's tab shows only that day's list.
+  const days = eventDays(event.date, event.end_date);
+  const activeDay = day && days.includes(day) ? day : null;
+  const items = activeDay ? allItems.filter((i) => i.day === activeDay) : allItems;
+  const dayTag = (item: Item) => (!activeDay && item.day ? formatDay(item.day) : null);
+
   const outstanding = items.filter((i) => !i.assigned_to);
   const ready = items.filter((i) => i.is_checked).length;
   const mine = items.filter((i) => i.assigned_to === me);
@@ -91,8 +100,8 @@ export function EventView({
       }),
     );
 
-  const when = [formatDate(event.date), event.location].filter(Boolean).join(" · ");
-  const openItem = items.find((i) => i.id === itemId) ?? null;
+  const when = [formatWhen(event.date, event.end_date), event.location].filter(Boolean).join(" · ");
+  const openItem = allItems.find((i) => i.id === itemId) ?? null;
   const openPerson = participants.find((p) => p.id === personId) ?? null;
 
   return (
@@ -138,11 +147,38 @@ export function EventView({
           </div>
         )}
 
+        {days.length > 0 && (
+          <div className="scrollbar-none -mx-5 mt-5 flex gap-2 overflow-x-auto px-5" role="tablist" aria-label="Days">
+            {[null, ...days].map((d) => {
+              const count = d ? allItems.filter((i) => i.day === d).length : allItems.length;
+              return (
+                <button
+                  key={d ?? "all"}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeDay === d}
+                  onClick={() => setDay(d)}
+                  className={`flex min-h-11 shrink-0 flex-col items-center justify-center rounded-2xl px-4 leading-tight transition ${activeDay === d ? "bg-ink text-paper" : "border border-line bg-card"}`}
+                >
+                  <span className="text-[15px] font-semibold whitespace-nowrap">{d ? formatDay(d) : "All days"}</span>
+                  <span className={`text-[12px] ${activeDay === d ? "opacity-70" : "text-muted"}`}>
+                    {count} {count === 1 ? "item" : "items"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Overall progress + filter */}
         <div className="mt-6">
           <div className="flex items-baseline justify-between">
             <p className="text-[15px] font-semibold">
-              {items.length === 0 ? "Nothing on the list yet" : `${ready} of ${items.length} ready`}
+              {items.length === 0
+                ? activeDay
+                  ? `Nothing for ${formatDay(activeDay)} yet`
+                  : "Nothing on the list yet"
+                : `${ready} of ${items.length} ready${activeDay ? ` on ${formatDay(activeDay)}` : ""}`}
             </p>
             {outstanding.length > 0 && (
               <p className="text-sm font-medium text-accent">{outstanding.length} need someone</p>
@@ -172,12 +208,23 @@ export function EventView({
 
         {items.length === 0 && !mineOnly && (
           <div className="mt-6 rounded-2xl border border-dashed border-line px-5 py-7 text-center">
-            <p className="font-semibold">Start with what&rsquo;s needed.</p>
-            <p className="mt-1 text-[15px] text-muted">
-              Tents, snacks, the speaker. Leave things unassigned and people can grab them.
-            </p>
+            {activeDay ? (
+              <>
+                <p className="font-semibold">Nothing just for {formatDay(activeDay)}.</p>
+                <p className="mt-1 text-[15px] text-muted">
+                  Add things only needed that day, like Saturday&rsquo;s dinner.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold">Start with what&rsquo;s needed.</p>
+                <p className="mt-1 text-[15px] text-muted">
+                  Tents, snacks, the speaker. Leave things unassigned and people can grab them.
+                </p>
+              </>
+            )}
             <Button onClick={() => openAdd(null)} className="mt-4 min-h-11 text-[15px]">
-              <PlusIcon className="size-4" /> Add the first items
+              <PlusIcon className="size-4" /> {activeDay ? `Add items for ${formatDay(activeDay)}` : "Add the first items"}
             </Button>
           </div>
         )}
@@ -195,7 +242,7 @@ export function EventView({
             ) : (
               <ul className="mt-1 divide-y divide-line">
                 {outstanding.map((item) => (
-                  <ItemRow key={item.id} item={item} onOpen={() => setItemId(item.id)}>
+                  <ItemRow key={item.id} item={item} tag={dayTag(item)} onOpen={() => setItemId(item.id)}>
                     <button
                       type="button"
                       onClick={() => take(item)}
@@ -224,6 +271,7 @@ export function EventView({
               onOpenItem={(i) => setItemId(i.id)}
               onToggle={toggle}
               onAdd={() => openAdd(p.id)}
+              dayTag={dayTag}
             />
           ))}
 
@@ -259,6 +307,9 @@ export function EventView({
         data={data}
         assignee={addFor}
         onAssigneeChange={setAddFor}
+        days={days}
+        day={addDay}
+        onDayChange={setAddDay}
         inputRef={addInput}
         run={run}
       />
@@ -301,6 +352,7 @@ function PersonSection({
   onOpenItem,
   onToggle,
   onAdd,
+  dayTag,
 }: {
   person: Participant;
   items: Item[];
@@ -310,6 +362,7 @@ function PersonSection({
   onOpenItem: (i: Item) => void;
   onToggle: (i: Item) => void;
   onAdd: () => void;
+  dayTag: (item: Item) => string | null;
 }) {
   const ready = items.filter((i) => i.is_checked).length;
   return (
@@ -340,7 +393,7 @@ function PersonSection({
       {items.length > 0 ? (
         <ul className="mt-1 divide-y divide-line pl-12">
           {items.map((item) => (
-            <ItemRow key={item.id} item={item} onOpen={() => onOpenItem(item)}>
+            <ItemRow key={item.id} item={item} tag={dayTag(item)} onOpen={() => onOpenItem(item)}>
               <CheckButton item={item} canCheck={you} onToggle={() => onToggle(item)} />
             </ItemRow>
           ))}
@@ -363,10 +416,12 @@ function PersonSection({
 
 function ItemRow({
   item,
+  tag,
   onOpen,
   children,
 }: {
   item: Item;
+  tag?: string | null;
   onOpen: () => void;
   children: React.ReactNode;
 }) {
@@ -380,6 +435,11 @@ function ItemRow({
         {item.quantity && (
           <span className="ml-2 rounded-md bg-soft px-1.5 py-0.5 align-[1px] text-[13px] font-semibold text-muted">
             &times;{item.quantity}
+          </span>
+        )}
+        {tag && (
+          <span className="ml-2 rounded-md bg-accent-soft px-1.5 py-0.5 align-[1px] text-[12px] font-bold text-accent">
+            {tag}
           </span>
         )}
         {item.note && <span className="mt-0.5 block truncate text-[14px] text-muted">{item.note}</span>}

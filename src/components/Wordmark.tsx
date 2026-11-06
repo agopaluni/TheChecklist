@@ -1,11 +1,8 @@
+/* eslint-disable @next/next/no-img-element -- a 96px static PNG; next/image adds nothing here */
 export function Wordmark() {
   return (
     <span className="inline-flex items-center gap-2 font-display text-lg font-extrabold tracking-tight">
-      <span className="grid size-7 place-items-center rounded-lg bg-accent text-accent-ink">
-        <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={3.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M5 12.5l4.5 4.5L19 7.5" />
-        </svg>
-      </span>
+      <img src="/logo-mark.png" alt="" width={28} height={28} className="size-7 rounded-lg" />
       TheChecklist
     </span>
   );

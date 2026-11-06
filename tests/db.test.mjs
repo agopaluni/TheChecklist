@@ -172,6 +172,57 @@ test("bulk-added items keep their order", async () => {
   assert.deepEqual(items.map((i) => i.name), names);
 });
 
+test("multi-day events: items can be pinned to a day inside the range", async () => {
+  const creator = token();
+  const slug = await rpc("create_event", {
+    p_name: "Long weekend",
+    p_creator_name: "Organizer",
+    p_token: creator,
+    p_date: "2026-11-13",
+    p_end_date: "2026-11-15",
+  });
+  const { event } = await rpc("get_event", { p_slug: slug });
+  assert.equal(event.end_date, "2026-11-15");
+
+  await rpc("add_items", {
+    p_event: event.id,
+    p_items: [{ name: "Pancake mix" }],
+    p_day: "2026-11-15",
+    p_token: creator,
+  });
+  await rpc("add_items", { p_event: event.id, p_items: [{ name: "Tent" }], p_token: creator });
+  await rejects(
+    rpc("add_items", { p_event: event.id, p_items: [{ name: "x" }], p_day: "2026-11-20", p_token: creator }),
+    "bad_day",
+  );
+  let { items } = await rpc("get_event", { p_slug: slug });
+  assert.deepEqual(items.map((i) => [i.name, i.day]), [["Pancake mix", "2026-11-15"], ["Tent", null]]);
+
+  await rpc("set_item_day", { p_item: items[1].id, p_day: "2026-11-14", p_token: creator });
+  // Shrinking the event drops days that no longer exist back to "whole event".
+  await rpc("update_event", {
+    p_event: event.id,
+    p_token: creator,
+    p_name: "Long weekend",
+    p_date: "2026-11-13",
+    p_end_date: "2026-11-14",
+  });
+  ({ items } = await rpc("get_event", { p_slug: slug }));
+  assert.deepEqual(items.map((i) => i.day), [null, "2026-11-14"]);
+});
+
+test("a same-day end date means a single-day event", async () => {
+  const slug = await rpc("create_event", {
+    p_name: "Dinner",
+    p_creator_name: "Organizer",
+    p_token: token(),
+    p_date: "2026-11-13",
+    p_end_date: "2026-11-13",
+  });
+  const { event } = await rpc("get_event", { p_slug: slug });
+  assert.equal(event.end_date, null);
+});
+
 test("removing a person sends their items to Outstanding", async () => {
   const creator = token();
   const { event } = await newEvent(creator);

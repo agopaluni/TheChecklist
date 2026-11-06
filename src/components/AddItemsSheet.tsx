@@ -2,7 +2,7 @@
 
 import { useState, type RefObject } from "react";
 import { api } from "@/lib/api";
-import { parseItemLines } from "@/lib/text";
+import { formatDay, parseItemLines } from "@/lib/text";
 import type { EventData, Item, NewItem } from "@/lib/types";
 import { AddPersonForm } from "./AddPersonSheet";
 import type { Run } from "./EventScreen";
@@ -20,6 +20,9 @@ export function AddItemsSheet({
   onAssigneeChange,
   inputRef,
   run,
+  days,
+  day,
+  onDayChange,
 }: {
   open: boolean;
   onClose: () => void;
@@ -28,6 +31,9 @@ export function AddItemsSheet({
   onAssigneeChange: (id: string | null) => void;
   inputRef: RefObject<HTMLInputElement | null>;
   run: Run;
+  days: string[];
+  day: string | null;
+  onDayChange: (day: string | null) => void;
 }) {
   const { event, participants, me } = data;
   const [text, setText] = useState("");
@@ -37,6 +43,11 @@ export function AddItemsSheet({
   const [added, setAdded] = useState<string[]>([]);
 
   const target = participants.find((p) => p.id === assignee);
+
+  function pickDay(d: string | null) {
+    onDayChange(d);
+    if (!listMode) inputRef.current?.focus();
+  }
 
   // Picking who it's for shouldn't drop the keyboard: put focus straight back in the field.
   function pickAssignee(id: string | null) {
@@ -53,13 +64,14 @@ export function AddItemsSheet({
       name: i.name,
       quantity: i.quantity ?? null,
       note: null,
+      day,
       assigned_to: assignee,
       is_checked: false,
       created_by: me,
       created_at: new Date().toISOString(),
     }));
     run(
-      () => api.addItems(event.id, newItems, assignee),
+      () => api.addItems(event.id, newItems, assignee, day),
       (d) => ({ ...d, items: [...d.items, ...optimistic] }),
     );
   }
@@ -122,6 +134,22 @@ export function AddItemsSheet({
             ? "You're bringing these."
             : `${target?.display_name} is bringing these.`}
       </p>
+
+      {days.length > 0 && (
+        <>
+          <p className="mt-4 text-[13px] font-bold tracking-[0.12em] text-muted uppercase">Which day</p>
+          <div className="scrollbar-none -mx-5 mt-2 flex gap-2 overflow-x-auto px-5 pb-1">
+            <Chip active={!day} onClick={() => pickDay(null)}>
+              Whole event
+            </Chip>
+            {days.map((d) => (
+              <Chip key={d} active={day === d} onClick={() => pickDay(d)}>
+                {formatDay(d)}
+              </Chip>
+            ))}
+          </div>
+        </>
+      )}
 
       {newPerson && (
         <div className="mt-4 rounded-2xl border border-line p-4">
@@ -208,6 +236,7 @@ export function AddItemsSheet({
           <div className="mt-4">
             <p className="text-sm font-semibold text-muted">
               Added {added.length} for {targetLabel}
+              {day ? ` on ${formatDay(day)}` : ""}
             </p>
             <ul className="mt-1.5 flex flex-wrap gap-1.5">
               {added.map((name, i) => (

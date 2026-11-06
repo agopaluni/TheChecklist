@@ -3,6 +3,7 @@ export type EventInfo = {
   slug: string;
   name: string;
   date: string | null;
+  end_date: string | null; // set only for multi-day events
   location: string | null;
   note: string | null;
   created_by: string | null;
@@ -21,6 +22,7 @@ export type Item = {
   name: string;
   quantity: string | null;
   note: string | null;
+  day: string | null; // a day of a multi-day event, or null for the whole event
   assigned_to: string | null;
   is_checked: boolean;
   created_by: string | null;
@@ -38,6 +40,7 @@ export type MyEvent = {
   slug: string;
   name: string;
   date: string | null;
+  end_date: string | null;
   location: string | null;
   me: string;
   is_creator: boolean;

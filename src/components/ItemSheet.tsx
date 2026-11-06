@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { eventDays, formatDay } from "@/lib/text";
 import type { EventData, Item } from "@/lib/types";
 import type { Run } from "./EventScreen";
 import { Sheet } from "./Sheet";
@@ -55,6 +56,12 @@ function ItemDetails({
   const owner = participants.find((p) => p.id === item.assigned_to);
   const mine = item.assigned_to === me;
   const canDelete = isCreator || item.created_by === me;
+  const days = eventDays(data.event.date, data.event.end_date);
+  const setDay = (day: string | null) =>
+    run(
+      () => api.setItemDay(item.id, day),
+      (d) => ({ ...d, items: d.items.map((i) => (i.id === item.id ? { ...i, day } : i)) }),
+    );
 
   const assign = (to: string | null) =>
     run(
@@ -140,6 +147,26 @@ function ItemDetails({
           ))}
         </div>
       </div>
+
+      {days.length > 0 && (
+        <div>
+          <p className="text-[13px] font-bold tracking-[0.12em] text-muted uppercase">Which day</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {[null, ...days].map((d) => (
+              <button
+                key={d ?? "whole"}
+                type="button"
+                disabled={pending}
+                onClick={() => setDay(d)}
+                aria-pressed={item.day === d}
+                className={`min-h-10 rounded-full px-4 text-[15px] font-semibold ${item.day === d ? "bg-ink text-paper" : "border border-line"}`}
+              >
+                {d ? formatDay(d) : "Whole event"}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <form
         className="space-y-3"

@@ -1,7 +1,7 @@
 // TheChecklist service worker: makes the app installable and lets it open offline.
 // Pages: network first, falling back to the last cached copy (the event page then shows
 // its last saved list from localStorage). Build assets: cache first, they're immutable.
-const VERSION = "v1";
+const VERSION = "v2";
 const PAGES = `pages-${VERSION}`;
 const ASSETS = `assets-${VERSION}`;
 const PRECACHE = ["/", "/new", "/offline", "/icons/icon-192.png"];

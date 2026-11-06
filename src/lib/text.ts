@@ -58,9 +58,36 @@ export function closeMatch(name: string, people: Participant[]): Participant | n
   return null;
 }
 
+const noon = (iso: string) => new Date(iso + "T12:00:00");
+const isoDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+// Every day of an event, as YYYY-MM-DD. Empty for single-day or undated events.
+export function eventDays(start: string | null, end: string | null): string[] {
+  if (!start || !end) return [];
+  const days: string[] = [];
+  for (let d = noon(start); isoDay(d) <= end && days.length < 31; d.setDate(d.getDate() + 1)) {
+    days.push(isoDay(d));
+  }
+  return days;
+}
+
+// "Sat 14"
+export function formatDay(day: string): string {
+  const d = noon(day);
+  return `${d.toLocaleDateString(undefined, { weekday: "short" })} ${d.getDate()}`;
+}
+
+// "Fri, Nov 13" or "Fri, Nov 13 – Sun, Nov 15"
+export function formatWhen(start: string | null, end: string | null): string | null {
+  if (!start) return null;
+  if (!end) return formatDate(start);
+  return `${formatDate(start)} – ${formatDate(end)}`;
+}
+
 export function formatDate(date: string | null): string | null {
   if (!date) return null;
-  const d = new Date(date + "T12:00:00");
+  const d = noon(date);
   const sameYear = d.getFullYear() === new Date().getFullYear();
   return d.toLocaleDateString(undefined, {
     weekday: "short",

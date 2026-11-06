@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { signInWithGoogle, signOut, useAuth } from "@/lib/auth";
 import { googleSignInEnabled } from "@/lib/supabase";
-import { formatDate } from "@/lib/text";
+import { formatWhen } from "@/lib/text";
 import type { MyEvent } from "@/lib/types";
 import { GoogleIcon } from "./icons";
 
@@ -60,7 +60,7 @@ export function MyEvents() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[17px] font-semibold">{e.name}</p>
                   <p className="truncate text-sm text-muted">
-                    {[formatDate(e.date), `You're ${e.me}`].filter(Boolean).join(" · ")}
+                    {[formatWhen(e.date, e.end_date), `You're ${e.me}`].filter(Boolean).join(" · ")}
                   </p>
                 </div>
                 <span className="shrink-0 text-sm font-semibold tabular-nums text-muted">
