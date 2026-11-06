@@ -78,6 +78,10 @@ When a guest signs in, their guest spots on that device move onto the Google acc
 2. Import the repo into Vercel and set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and (once Google is set up) `NEXT_PUBLIC_GOOGLE_SIGN_IN=true`.
 3. In Supabase → Authentication → URL Configuration, set the Site URL to your Vercel URL and add `https://<your-domain>/**` to the redirect URLs.
 
+### Custom domain
+
+The live app runs at https://thechecklist.me (DNS at GoDaddy: two `A` records for `@` and a `www` CNAME, as `vercel domains verify thechecklist.me` lists them). `www` redirects to the bare domain. The old `thechecklist-phi.vercel.app` address keeps working on purpose: guest identities are stored per address, so redirecting it would make earlier guests lose their names. When adding a domain, also add it to Supabase (Site URL and redirect URLs) and to the Google client's authorized domains and JavaScript origins.
+
 ## How it works
 
 **Everything goes through Postgres functions.** The browser can't read or write the tables directly: row level security is on with no policies, and table privileges are revoked. It calls `security definer` functions in [`supabase/migrations`](supabase/migrations/20261106000000_init.sql) that enforce the rules. Anyone with an event's slug can read and edit it, but nobody can list events they don't belong to. A future native app can call the same functions.
