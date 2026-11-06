@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { signInWithGoogle, type AuthState } from "@/lib/auth";
+import type { AuthState } from "@/lib/auth";
 import { setPendingJoin, type PendingJoin } from "@/lib/identity";
 import { googleSignInEnabled } from "@/lib/supabase";
 import { closeMatch, formatWhen } from "@/lib/text";
 import type { EventData, Participant } from "@/lib/types";
 import type { Run } from "./EventScreen";
-import { BackIcon, GoogleIcon } from "./icons";
+import { GoogleButton } from "./GoogleButton";
+import { BackIcon } from "./icons";
 import { Avatar, Button } from "./ui";
 
 type Choice = { kind: "claim"; person: Participant } | { kind: "new"; name: string };
@@ -40,18 +41,22 @@ export function WhoAreYou({ data, run, auth }: { data: EventData; run: Run; auth
     else join(c);
   }
 
-  async function withGoogle(c: Choice) {
+  // Signed in through Google's popup: claim the name with the account, unless the account
+  // already has someone in this event (a returning user on a new device).
+  async function afterGoogle(c: Choice) {
+    setBusy(true);
+    const fresh = await api.getEvent(event.slug).catch(() => null);
+    if (fresh?.me) await run(async () => {});
+    else await join(c);
+  }
+
+  // Only used when Google's script is blocked and we fall back to the redirect flow.
+  function rememberChoice(c: Choice) {
     const pending: PendingJoin =
       c.kind === "claim"
         ? { slug: event.slug, kind: "claim", participantId: c.person.id, name: c.person.display_name }
         : { slug: event.slug, kind: "new", name: c.name };
     setPendingJoin(pending);
-    setBusy(true);
-    try {
-      await signInWithGoogle();
-    } catch {
-      setBusy(false);
-    }
   }
 
   const when = [formatWhen(event.date, event.end_date), event.location].filter(Boolean).join(" · ");
@@ -71,7 +76,8 @@ export function WhoAreYou({ data, run, auth }: { data: EventData; run: Run; auth
           name={choice.kind === "claim" ? choice.person.display_name : choice.name}
           busy={busy}
           onGuest={() => join(choice)}
-          onGoogle={() => withGoogle(choice)}
+          onGoogleSignedIn={() => afterGoogle(choice)}
+          onBeforeRedirect={() => rememberChoice(choice)}
           onBack={() => setChoice(null)}
         />
       ) : (
@@ -209,13 +215,15 @@ function KeepIdentity({
   name,
   busy,
   onGuest,
-  onGoogle,
+  onGoogleSignedIn,
+  onBeforeRedirect,
   onBack,
 }: {
   name: string;
   busy: boolean;
   onGuest: () => void;
-  onGoogle: () => void;
+  onGoogleSignedIn: () => void;
+  onBeforeRedirect: () => void;
   onBack: () => void;
 }) {
   return (
@@ -241,9 +249,7 @@ function KeepIdentity({
         <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
       </div>
 
-      <Button variant="secondary" onClick={onGoogle} disabled={busy} className="w-full">
-        <GoogleIcon /> Sign in with Google
-      </Button>
+      <GoogleButton onSignedIn={onGoogleSignedIn} beforeRedirect={onBeforeRedirect} />
       <p className="mt-2 text-center text-sm text-muted">
         See all your events in one place and use any device. Nobody else in the event ever sees
         your email.
@@ -265,17 +271,10 @@ function MissingName({ creator, auth }: { creator?: string; auth: AuthState }) {
           name&rsquo;s menu, then tap your name here. All your items will still be there.
         </p>
         {googleSignInEnabled && !auth.user && (
-          <p>
-            Used Google last time?{" "}
-            <button
-              type="button"
-              className="font-semibold text-ink underline"
-              onClick={() => signInWithGoogle()}
-            >
-              Sign in
-            </button>{" "}
-            and you&rsquo;ll be back automatically.
-          </p>
+          <div className="space-y-3">
+            <p>Used Google last time? Sign in and you&rsquo;ll be back automatically.</p>
+            <GoogleButton />
+          </div>
         )}
       </div>
     </details>

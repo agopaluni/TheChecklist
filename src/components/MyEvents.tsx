@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { signInWithGoogle, signOut, useAuth } from "@/lib/auth";
+import { signOut, useAuth } from "@/lib/auth";
 import { googleSignInEnabled } from "@/lib/supabase";
 import { formatWhen } from "@/lib/text";
 import type { MyEvent } from "@/lib/types";
-import { GoogleIcon } from "./icons";
+import { GoogleButton } from "./GoogleButton";
 
 export function MyEvents() {
   const auth = useAuth();
@@ -82,13 +82,10 @@ export function MyEvents() {
               </button>
             </p>
           ) : (
-            <button
-              type="button"
-              onClick={() => signInWithGoogle()}
-              className="inline-flex items-center gap-2 font-semibold text-ink"
-            >
-              <GoogleIcon className="size-4" /> Sign in to see your events on any device
-            </button>
+            <div className="space-y-3">
+              <p>Sign in to see your events on any device.</p>
+              <GoogleButton />
+            </div>
           )}
         </div>
       )}

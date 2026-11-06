@@ -38,6 +38,7 @@ To try two people on one computer, use separate browser profiles or origins. `lo
 | `NEXT_PUBLIC_SUPABASE_URL` | app | Supabase API URL |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | app | Publishable key (the legacy `anon` key also works) |
 | `NEXT_PUBLIC_GOOGLE_SIGN_IN` | app | `true` shows the Google options. Leave it `false` until Google is configured. |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | app | The Google OAuth client id (public). Turns on Google's own sign-in button, so the popup names your site instead of `<project>.supabase.co`. |
 | `SUPABASE_SECRET_KEY` | tests only | Lets `npm run test:db` create a throwaway user for the Google-merge test. Never ship it. |
 
 ### Tests
@@ -61,7 +62,9 @@ These tests call the same database functions the app calls, against your running
    Then set `enabled = true` under `[auth.external.google]` in `supabase/config.toml` and run `supabase stop && supabase start`.
    **Hosted:** Dashboard → Authentication → Providers → Google: paste the client id and secret.
 3. Add your app URLs to Supabase's redirect allow list (Authentication → URL Configuration), e.g. `https://your-app.vercel.app/**`. Locally, `config.toml` already allows `http://localhost:3000/**`.
-4. Set `NEXT_PUBLIC_GOOGLE_SIGN_IN=true`.
+4. Set `NEXT_PUBLIC_GOOGLE_SIGN_IN=true` and `NEXT_PUBLIC_GOOGLE_CLIENT_ID=<client id>`. Add every origin the app runs on (e.g. `http://localhost:3000`) to the client's **Authorized JavaScript origins**.
+
+The app uses Google's own button (Google Identity Services). Its popup says you're signing in to your site, and the ID token it returns is exchanged for a Supabase session with `signInWithIdToken`, using a nonce. If an ad blocker stops Google's script, the app falls back to the redirect flow through Supabase, which shows the `<project>.supabase.co` address.
 
 When a guest signs in, their guest spots on that device move onto the Google account (`link_guest_to_account`). If the account already holds a different person in the same event, the account's person wins and the device's guest spot goes back to unclaimed, because a person can only be one participant per event. Other participants never see email addresses. The app's tables store only the Supabase auth user id.
 

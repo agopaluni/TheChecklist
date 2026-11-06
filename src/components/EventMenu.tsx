@@ -3,13 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { signInWithGoogle, signOut, type AuthState } from "@/lib/auth";
+import { signOut, type AuthState } from "@/lib/auth";
 import { googleSignInEnabled } from "@/lib/supabase";
 import type { EventData } from "@/lib/types";
 import type { Run } from "./EventScreen";
-import { GoogleIcon } from "./icons";
+import { GoogleButton } from "./GoogleButton";
 import { Sheet, SheetAction } from "./Sheet";
-import { Button } from "./ui";
+import { Button, useToast } from "./ui";
 
 export function EventMenu({
   open,
@@ -32,6 +32,7 @@ export function EventMenu({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const toast = useToast();
   const { event, me } = data;
 
   function close() {
@@ -72,19 +73,20 @@ export function EventMenu({
                 Sign out of Google
               </SheetAction>
             ) : (
-              <button
-                type="button"
-                onClick={() => signInWithGoogle()}
-                className="flex w-full items-start gap-3 rounded-2xl px-4 py-3.5 text-left hover:bg-soft"
-              >
-                <GoogleIcon className="mt-0.5 size-5 shrink-0" />
-                <span>
-                  <span className="block text-[17px] font-semibold">Sign in with Google</span>
-                  <span className="mt-0.5 block text-sm text-muted">
-                    Keep being {meName} on any device and see all your events in one place.
-                  </span>
-                </span>
-              </button>
+              <div className="px-4 py-3.5">
+                <p className="text-[17px] font-semibold">Keep being {meName} everywhere</p>
+                <p className="mt-0.5 mb-3 text-sm text-muted">
+                  Sign in with Google to use any device and see all your events in one place.
+                </p>
+                {open && (
+                  <GoogleButton
+                    onSignedIn={() => {
+                      close();
+                      toast(`Signed in. You're ${meName} on any device now.`);
+                    }}
+                  />
+                )}
+              </div>
             ))}
 
           {!isCreator && me && (
