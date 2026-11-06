@@ -50,5 +50,7 @@ export function GoogleButton({
       </button>
     );
   }
-  return <div ref={slot} className="flex min-h-11 w-full justify-center" />;
+  // color-scheme: light stops the browser painting a white box behind Google's iframe
+  // when the page is in dark mode.
+  return <div ref={slot} style={{ colorScheme: "light" }} className="flex min-h-11 w-full justify-center" />;
 }
