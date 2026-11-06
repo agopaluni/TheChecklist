@@ -36,7 +36,7 @@ export function NewEventForm() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-5 pt-[max(1rem,env(safe-area-inset-top))]">
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-5 pt-[max(1rem,env(safe-area-inset-top))] lg:max-w-5xl lg:px-10 lg:pb-16">
       <header className="flex items-center gap-2 py-3">
         <Link
           href="/"
@@ -46,12 +46,22 @@ export function NewEventForm() {
           <BackIcon />
         </Link>
       </header>
-      <h1 className="font-display text-[2.1rem] leading-tight font-extrabold tracking-tight">
-        New event
-      </h1>
-      <p className="mt-1 text-muted">You can change any of this later.</p>
+      <div className="flex flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.25fr)] lg:items-start lg:gap-16 lg:pt-8">
+      <div className="lg:sticky lg:top-12">
+        <h1 className="font-display text-[2.1rem] leading-tight font-extrabold tracking-tight lg:text-[3.2rem] lg:leading-[1.02]">
+          New event
+        </h1>
+        <p className="mt-1 text-muted lg:mt-4 lg:text-[18px]">You can change any of this later.</p>
+        <p className="mt-6 hidden max-w-sm text-[16px] leading-relaxed text-muted lg:block">
+          You&rsquo;ll get a link to send around. Friends tap their name, grab what they&rsquo;re
+          bringing, and check things off as they pack.
+        </p>
+      </div>
 
-      <form action={submit} className="mt-6 flex flex-1 flex-col gap-5">
+      <form
+        action={submit}
+        className="mt-6 flex flex-1 flex-col gap-5 lg:mt-0 lg:rounded-[2rem] lg:border lg:border-line lg:bg-card lg:p-8 lg:shadow-[0_20px_60px_-30px_rgba(0,0,0,0.25)]"
+      >
         <Field label="What's the event?">
           <input
             name="name"
@@ -111,12 +121,13 @@ export function NewEventForm() {
 
         {error && <p className="text-[15px] font-medium text-accent">{error}</p>}
 
-        <div className="bottom-safe sticky bottom-0 -mx-5 mt-auto bg-gradient-to-t from-paper via-paper to-transparent px-5 pt-6">
+        <div className="bottom-safe sticky bottom-0 -mx-5 mt-auto bg-gradient-to-t from-paper via-paper to-transparent px-5 pt-6 lg:static lg:mx-0 lg:mt-2 lg:bg-none lg:px-0 lg:pt-0 lg:pb-0">
           <Button type="submit" disabled={busy} className="w-full">
             {busy ? "Creating…" : "Create event"}
           </Button>
         </div>
       </form>
+      </div>
     </main>
   );
 }

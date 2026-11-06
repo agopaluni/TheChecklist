@@ -43,8 +43,8 @@ export function Sheet({
         role="dialog"
         aria-modal="true"
         aria-label={typeof title === "string" ? title : undefined}
-        style={{ bottom: keyboard }}
-        className={`absolute inset-x-0 mx-auto flex max-h-[88dvh] w-full max-w-lg flex-col rounded-t-3xl border border-b-0 border-line bg-card shadow-[0_-12px_40px_-12px_rgba(0,0,0,0.25)] transition-transform duration-200 ease-out sm:mb-4 sm:rounded-3xl sm:border-b ${open ? "translate-y-0" : "translate-y-[110%]"}`}
+        style={keyboard ? { bottom: keyboard } : undefined}
+        className={`absolute inset-x-0 bottom-0 mx-auto flex max-h-[88dvh] w-full max-w-lg flex-col rounded-t-3xl border border-b-0 border-line bg-card shadow-[0_-12px_40px_-12px_rgba(0,0,0,0.25)] transition-[translate,scale,opacity] duration-200 ease-out sm:mb-4 sm:rounded-3xl sm:border-b lg:top-1/2 lg:bottom-auto lg:mb-0 lg:max-h-[80dvh] lg:max-w-xl lg:-translate-y-1/2 lg:shadow-[0_24px_80px_-20px_rgba(0,0,0,0.35)] ${open ? "translate-y-0 lg:scale-100 lg:opacity-100" : "translate-y-[110%] lg:scale-95 lg:opacity-0"}`}
       >
         <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-2">
           <h2 className="font-display text-xl font-bold tracking-tight">{title}</h2>

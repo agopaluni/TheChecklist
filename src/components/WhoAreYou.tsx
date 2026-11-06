@@ -10,6 +10,7 @@ import type { EventData, Participant } from "@/lib/types";
 import type { Run } from "./EventScreen";
 import { GoogleButton } from "./GoogleButton";
 import { BackIcon } from "./icons";
+import { Wordmark } from "./Wordmark";
 import { Avatar, Button } from "./ui";
 
 type Choice = { kind: "claim"; person: Participant } | { kind: "new"; name: string };
@@ -62,14 +63,28 @@ export function WhoAreYou({ data, run, auth }: { data: EventData; run: Run; auth
   const when = [formatWhen(event.date, event.end_date), event.location].filter(Boolean).join(" · ");
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-[max(2rem,env(safe-area-inset-top))] pb-10">
-      <p className="text-[13px] font-bold tracking-[0.12em] text-accent uppercase">
-        {creator ? `${creator.display_name}'s event` : "You're invited"}
-      </p>
-      <h1 className="mt-1 font-display text-[2.3rem] leading-[1.05] font-extrabold tracking-tight text-balance">
-        {event.name}
-      </h1>
-      {when && <p className="mt-1.5 text-[17px] text-muted">{when}</p>}
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-[max(2rem,env(safe-area-inset-top))] pb-10 lg:grid lg:max-w-5xl lg:grid-cols-[1fr_minmax(0,27rem)] lg:items-center lg:gap-20 lg:px-10 lg:py-16">
+      <div>
+        <div className="mb-10 hidden lg:block">
+          <Wordmark />
+        </div>
+        <p className="text-[13px] font-bold tracking-[0.12em] text-accent uppercase">
+          {creator ? `${creator.display_name}'s event` : "You're invited"}
+        </p>
+        <h1 className="mt-1 font-display text-[2.3rem] leading-[1.05] font-extrabold tracking-tight text-balance lg:mt-3 lg:text-[3.6rem] lg:leading-[1]">
+          {event.name}
+        </h1>
+        {when && <p className="mt-1.5 text-[17px] text-muted lg:mt-4 lg:text-[19px]">{when}</p>}
+        {event.note && (
+          <p className="mt-5 hidden max-w-md text-[17px] leading-relaxed whitespace-pre-line lg:block">{event.note}</p>
+        )}
+        <p className="mt-8 hidden text-[15px] text-muted lg:block">
+          {participants.length} {participants.length === 1 ? "person" : "people"} · {data.items.length}{" "}
+          {data.items.length === 1 ? "item" : "items"} on the list
+        </p>
+      </div>
+
+      <div className="lg:rounded-[2rem] lg:border lg:border-line lg:bg-card lg:p-8 lg:shadow-[0_20px_60px_-30px_rgba(0,0,0,0.25)] lg:[&>section]:mt-0">
 
       {choice ? (
         <KeepIdentity
@@ -126,6 +141,7 @@ export function WhoAreYou({ data, run, auth }: { data: EventData; run: Run; auth
           <MissingName creator={creator?.display_name} auth={auth} />
         </section>
       )}
+      </div>
     </main>
   );
 }

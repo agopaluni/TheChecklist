@@ -16,6 +16,7 @@ import { BackIcon, CheckIcon, MoreIcon, PlusIcon, ShareIcon } from "./icons";
 import { ItemSheet } from "./ItemSheet";
 import { PersonSheet } from "./PersonSheet";
 import { Avatar, Button, ProgressBar, useToast } from "./ui";
+import { Wordmark } from "./Wordmark";
 
 export function EventView({
   data,
@@ -104,196 +105,265 @@ export function EventView({
   const openItem = allItems.find((i) => i.id === itemId) ?? null;
   const openPerson = participants.find((p) => p.id === personId) ?? null;
 
+  const dayTabs = days.length > 0 && (
+    <div
+      className="scrollbar-none -mx-5 mt-5 flex gap-2 overflow-x-auto px-5 lg:mx-0 lg:mt-7 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-0"
+      role="tablist"
+      aria-label="Days"
+    >
+      <p className="hidden text-[12px] font-bold tracking-[0.12em] text-muted uppercase lg:mb-1 lg:block">Days</p>
+      {[null, ...days].map((d) => {
+        const count = d ? allItems.filter((i) => i.day === d).length : allItems.length;
+        const active = activeDay === d;
+        return (
+          <button
+            key={d ?? "all"}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => setDay(d)}
+            className={`flex min-h-11 shrink-0 flex-col items-center justify-center rounded-2xl px-4 leading-tight transition lg:min-h-10 lg:flex-row lg:justify-between lg:rounded-xl lg:px-3 ${active ? "bg-ink text-paper" : "border border-line bg-card lg:border-transparent lg:bg-transparent lg:hover:bg-soft"}`}
+          >
+            <span className="text-[15px] font-semibold whitespace-nowrap">{d ? formatDay(d) : "All days"}</span>
+            <span className={`text-[12px] lg:text-[13px] ${active ? "opacity-70" : "text-muted"}`}>
+              {count} <span className="lg:hidden">{count === 1 ? "item" : "items"}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
   return (
-    <div className="mx-auto w-full max-w-xl">
-      <header className="sticky top-0 z-20 flex items-center gap-1 bg-paper/90 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1 backdrop-blur">
-        <Link href="/" className="grid size-11 place-items-center rounded-full hover:bg-soft" aria-label="All events">
+    <div className="mx-auto w-full max-w-xl lg:max-w-6xl lg:px-8">
+      <header className="sticky top-0 z-20 flex items-center gap-1 bg-paper/90 px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-1 backdrop-blur lg:-mx-8 lg:mb-6 lg:px-8 lg:py-4">
+        <Link href="/" className="grid size-11 place-items-center rounded-full hover:bg-soft lg:hidden" aria-label="All events">
           <BackIcon />
         </Link>
+        <Link href="/" className="hidden rounded-xl px-1 py-1 lg:block" aria-label="All events">
+          <Wordmark />
+        </Link>
         <span className="flex-1" />
-        <button type="button" onClick={share} className="grid size-11 place-items-center rounded-full hover:bg-soft" aria-label="Share link">
-          <ShareIcon />
+        <button type="button" onClick={share} className="grid size-11 place-items-center rounded-full hover:bg-soft lg:flex lg:w-auto lg:gap-2 lg:px-4 lg:text-[15px] lg:font-semibold" aria-label="Share link">
+          <ShareIcon /> <span className="hidden lg:inline">Share</span>
         </button>
         <button type="button" onClick={() => setMenuOpen(true)} className="grid size-11 place-items-center rounded-full hover:bg-soft" aria-label="Event menu">
           <MoreIcon />
         </button>
       </header>
 
-      <main className="px-5 pb-36">
-        <h1 className="font-display text-[2.1rem] leading-[1.05] font-extrabold tracking-tight text-balance">
-          {event.name}
-        </h1>
-        {when && <p className="mt-1 text-[17px] text-muted">{when}</p>}
-        {event.note && <p className="mt-3 whitespace-pre-line text-[16px] leading-relaxed">{event.note}</p>}
+      <div className="lg:grid lg:grid-cols-[18.5rem_minmax(0,1fr)] lg:gap-12">
+        {/* Sidebar on desktop; the top of the page on phones */}
+        <aside className="px-5 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:self-start lg:overflow-y-auto lg:px-0 lg:pb-8">
+          <h1 className="font-display text-[2.1rem] leading-[1.05] font-extrabold tracking-tight text-balance lg:text-[2.2rem]">
+            {event.name}
+          </h1>
+          {when && <p className="mt-1 text-[17px] text-muted">{when}</p>}
+          {event.note && <p className="mt-3 whitespace-pre-line text-[16px] leading-relaxed">{event.note}</p>}
 
-        {isNew && (
-          <div className="animate-rise mt-5 rounded-2xl bg-accent-soft p-4">
-            <p className="font-semibold">Send this to everyone</p>
-            <p className="mt-0.5 text-[15px] text-muted">
-              Anyone with the link can join, pick their name and grab things to bring.
-            </p>
-            <div className="mt-3 flex gap-2">
-              <Button onClick={share} className="min-h-11 flex-1 text-[15px]">
-                <ShareIcon className="size-4" /> Share link
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => router.replace(`/e/${event.slug}`, { scroll: false })}
-                className="min-h-11 text-[15px]"
-              >
-                Later
-              </Button>
+          {isNew && (
+            <div className="animate-rise mt-5 rounded-2xl bg-accent-soft p-4">
+              <p className="font-semibold">Send this to everyone</p>
+              <p className="mt-0.5 text-[15px] text-muted">
+                Anyone with the link can join, pick their name and grab things to bring.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <Button onClick={share} className="min-h-11 flex-1 text-[15px]">
+                  <ShareIcon className="size-4" /> Share link
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => router.replace(`/e/${event.slug}`, { scroll: false })}
+                  className="min-h-11 text-[15px]"
+                >
+                  Later
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {days.length > 0 && (
-          <div className="scrollbar-none -mx-5 mt-5 flex gap-2 overflow-x-auto px-5" role="tablist" aria-label="Days">
-            {[null, ...days].map((d) => {
-              const count = d ? allItems.filter((i) => i.day === d).length : allItems.length;
-              return (
+          <div className="lg:hidden">{dayTabs}</div>
+
+          {/* Overall progress + filter */}
+          <div className="mt-6 lg:mt-7 lg:rounded-2xl lg:border lg:border-line lg:bg-card lg:p-4">
+            <div className="flex items-baseline justify-between">
+              <p className="text-[15px] font-semibold">
+                {items.length === 0
+                  ? activeDay
+                    ? `Nothing for ${formatDay(activeDay)} yet`
+                    : "Nothing on the list yet"
+                  : `${ready} of ${items.length} ready${activeDay ? ` on ${formatDay(activeDay)}` : ""}`}
+              </p>
+              {outstanding.length > 0 && (
+                <p className="text-sm font-medium text-accent">{outstanding.length} need someone</p>
+              )}
+            </div>
+            <div className="mt-2">
+              <ProgressBar ready={ready} total={items.length} />
+            </div>
+            <div className="mt-4 inline-flex rounded-full bg-soft p-1 lg:flex" role="tablist">
+              {[
+                ["Everyone", false],
+                [`My items${mine.length ? ` · ${mine.length}` : ""}`, true],
+              ].map(([label, value]) => (
                 <button
-                  key={d ?? "all"}
+                  key={String(value)}
                   type="button"
                   role="tab"
-                  aria-selected={activeDay === d}
-                  onClick={() => setDay(d)}
-                  className={`flex min-h-11 shrink-0 flex-col items-center justify-center rounded-2xl px-4 leading-tight transition ${activeDay === d ? "bg-ink text-paper" : "border border-line bg-card"}`}
+                  aria-selected={mineOnly === value}
+                  onClick={() => setMineOnly(value as boolean)}
+                  className={`min-h-10 rounded-full px-4 text-[15px] font-semibold transition lg:flex-1 ${mineOnly === value ? "bg-card shadow-sm" : "text-muted"}`}
                 >
-                  <span className="text-[15px] font-semibold whitespace-nowrap">{d ? formatDay(d) : "All days"}</span>
-                  <span className={`text-[12px] ${activeDay === d ? "opacity-70" : "text-muted"}`}>
-                    {count} {count === 1 ? "item" : "items"}
-                  </span>
+                  {label as string}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        )}
 
-        {/* Overall progress + filter */}
-        <div className="mt-6">
-          <div className="flex items-baseline justify-between">
-            <p className="text-[15px] font-semibold">
-              {items.length === 0
-                ? activeDay
-                  ? `Nothing for ${formatDay(activeDay)} yet`
-                  : "Nothing on the list yet"
-                : `${ready} of ${items.length} ready${activeDay ? ` on ${formatDay(activeDay)}` : ""}`}
-            </p>
-            {outstanding.length > 0 && (
-              <p className="text-sm font-medium text-accent">{outstanding.length} need someone</p>
-            )}
-          </div>
-          <div className="mt-2">
-            <ProgressBar ready={ready} total={items.length} />
-          </div>
-          <div className="mt-4 inline-flex rounded-full bg-soft p-1" role="tablist">
-            {[
-              ["Everyone", false],
-              [`My items${mine.length ? ` · ${mine.length}` : ""}`, true],
-            ].map(([label, value]) => (
-              <button
-                key={String(value)}
-                type="button"
-                role="tab"
-                aria-selected={mineOnly === value}
-                onClick={() => setMineOnly(value as boolean)}
-                className={`min-h-10 rounded-full px-4 text-[15px] font-semibold transition ${mineOnly === value ? "bg-card shadow-sm" : "text-muted"}`}
-              >
-                {label as string}
-              </button>
-            ))}
-          </div>
-        </div>
+          <div className="hidden lg:block">{dayTabs}</div>
 
-        {items.length === 0 && !mineOnly && (
-          <div className="mt-6 rounded-2xl border border-dashed border-line px-5 py-7 text-center">
-            {activeDay ? (
-              <>
-                <p className="font-semibold">Nothing just for {formatDay(activeDay)}.</p>
-                <p className="mt-1 text-[15px] text-muted">
-                  Add things only needed that day, like Saturday&rsquo;s dinner.
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="font-semibold">Start with what&rsquo;s needed.</p>
-                <p className="mt-1 text-[15px] text-muted">
-                  Tents, snacks, the speaker. Leave things unassigned and people can grab them.
-                </p>
-              </>
-            )}
-            <Button onClick={() => openAdd(null)} className="mt-4 min-h-11 text-[15px]">
-              <PlusIcon className="size-4" /> {activeDay ? `Add items for ${formatDay(activeDay)}` : "Add the first items"}
+          {/* Desktop: actions and the roster live in the sidebar */}
+          <div className="mt-7 hidden gap-2 lg:flex">
+            <Button onClick={() => openAdd()} disabled={offline} className="min-h-12 flex-1 text-[16px]">
+              <PlusIcon className="size-4" /> Add items
+            </Button>
+            <Button variant="secondary" onClick={() => setAddingPerson(true)} className="min-h-12 px-4 text-[16px]" aria-label="Add someone">
+              <PlusIcon className="size-4" /> Person
             </Button>
           </div>
-        )}
-
-        {!mineOnly && items.length > 0 && (
-          <section className="mt-7" aria-labelledby="outstanding">
-            <div className="flex items-center gap-2">
-              <h2 id="outstanding" className="text-[13px] font-bold tracking-[0.12em] text-accent uppercase">
-                Outstanding
-              </h2>
-              <span className="text-[13px] font-bold text-accent">{outstanding.length || ""}</span>
-            </div>
-            {outstanding.length === 0 ? (
-              <p className="mt-2 text-[15px] text-muted">Everything has someone. Nice.</p>
-            ) : (
-              <ul className="mt-1 divide-y divide-line">
-                {outstanding.map((item) => (
-                  <ItemRow key={item.id} item={item} tag={dayTag(item)} onOpen={() => setItemId(item.id)}>
+          <div className="mt-7 hidden lg:block">
+            <p className="mb-1 text-[12px] font-bold tracking-[0.12em] text-muted uppercase">People</p>
+            <ul>
+              {people.map((p) => {
+                const theirs = items.filter((i) => i.assigned_to === p.id);
+                const done = theirs.filter((i) => i.is_checked).length;
+                return (
+                  <li key={p.id}>
                     <button
                       type="button"
-                      onClick={() => take(item)}
-                      disabled={offline}
-                      className="shrink-0 rounded-full bg-accent px-3.5 py-2 text-[14px] font-bold text-accent-ink active:scale-95 disabled:opacity-50"
+                      onClick={() => {
+                        setMineOnly(false);
+                        requestAnimationFrame(() =>
+                          document.getElementById(`person-${p.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                        );
+                      }}
+                      className="flex min-h-10 w-full items-center gap-2.5 rounded-xl px-2 text-left hover:bg-soft"
                     >
-                      I&rsquo;ll bring this
+                      <span className={`size-2 shrink-0 rounded-full ${p.is_claimed ? "bg-accent" : "border border-muted"}`} aria-hidden />
+                      <span className="flex-1 truncate text-[15px] font-medium">
+                        {p.display_name}
+                        {p.id === me && <span className="ml-1.5 text-[12px] font-bold text-accent uppercase">You</span>}
+                      </span>
+                      <span className={`text-[13px] tabular-nums ${theirs.length && done === theirs.length ? "font-semibold text-accent" : "text-muted"}`}>
+                        {theirs.length ? `${done}/${theirs.length}` : "–"}
+                      </span>
                     </button>
-                  </ItemRow>
-                ))}
-              </ul>
-            )}
-          </section>
-        )}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-2 px-2 text-[12px] text-muted">
+              <span className="mr-1 inline-block size-2 rounded-full bg-accent align-middle" /> joined
+              <span className="mr-1 ml-3 inline-block size-2 rounded-full border border-muted align-middle" /> not yet
+            </p>
+          </div>
+        </aside>
 
-        {people
-          .filter((p) => !mineOnly || p.id === me)
-          .map((p) => (
-            <PersonSection
-              key={p.id}
-              person={p}
-              items={items.filter((i) => i.assigned_to === p.id)}
-              you={p.id === me}
-              outstandingCount={outstanding.length}
-              onMenu={() => setPersonId(p.id)}
-              onOpenItem={(i) => setItemId(i.id)}
-              onToggle={toggle}
-              onAdd={() => openAdd(p.id)}
-              dayTag={dayTag}
-            />
-          ))}
+        <main className="px-5 pb-36 lg:px-0 lg:pb-16">
+          {items.length === 0 && !mineOnly && (
+            <div className="mt-6 rounded-2xl border border-dashed border-line px-5 py-7 text-center lg:mt-0 lg:rounded-3xl lg:py-16">
+              {activeDay ? (
+                <>
+                  <p className="font-semibold">Nothing just for {formatDay(activeDay)}.</p>
+                  <p className="mt-1 text-[15px] text-muted">
+                    Add things only needed that day, like Saturday&rsquo;s dinner.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-semibold">Start with what&rsquo;s needed.</p>
+                  <p className="mt-1 text-[15px] text-muted">
+                    Tents, snacks, the speaker. Leave things unassigned and people can grab them.
+                  </p>
+                </>
+              )}
+              <Button onClick={() => openAdd(null)} className="mt-4 min-h-11 text-[15px]">
+                <PlusIcon className="size-4" /> {activeDay ? `Add items for ${formatDay(activeDay)}` : "Add the first items"}
+              </Button>
+            </div>
+          )}
 
-        {mineOnly && outstanding.length > 0 && (
-          <button type="button" onClick={() => setMineOnly(false)} className="mt-6 text-[15px] font-semibold text-accent">
-            {outstanding.length} {outstanding.length === 1 ? "thing still needs" : "things still need"} someone &rarr;
-          </button>
-        )}
+          {!mineOnly && items.length > 0 && (
+            <section
+              className="mt-7 lg:mt-0 lg:mb-6 lg:rounded-3xl lg:border lg:border-accent/25 lg:bg-accent-soft/40 lg:px-6 lg:py-5"
+              aria-labelledby="outstanding"
+            >
+              <div className="flex items-center gap-2">
+                <h2 id="outstanding" className="text-[13px] font-bold tracking-[0.12em] text-accent uppercase">
+                  Outstanding
+                </h2>
+                <span className="text-[13px] font-bold text-accent">{outstanding.length || ""}</span>
+              </div>
+              {outstanding.length === 0 ? (
+                <p className="mt-2 text-[15px] text-muted">Everything has someone. Nice.</p>
+              ) : (
+                <ul className="mt-1 divide-y divide-line lg:grid lg:grid-cols-2 lg:gap-x-10 lg:divide-y-0">
+                  {outstanding.map((item) => (
+                    <ItemRow key={item.id} item={item} tag={dayTag(item)} onOpen={() => setItemId(item.id)}>
+                      <button
+                        type="button"
+                        onClick={() => take(item)}
+                        disabled={offline}
+                        className="shrink-0 rounded-full bg-accent px-3.5 py-2 text-[14px] font-bold text-accent-ink active:scale-95 disabled:opacity-50"
+                      >
+                        I&rsquo;ll bring this
+                      </button>
+                    </ItemRow>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
 
-        {!mineOnly && (
-          <button
-            type="button"
-            onClick={() => setAddingPerson(true)}
-            className="mt-8 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-[15px] font-semibold text-muted hover:border-accent hover:text-ink"
-          >
-            <PlusIcon className="size-4" /> Add someone who hasn&rsquo;t joined yet
-          </button>
-        )}
-      </main>
+          <div className="lg:columns-2 lg:gap-6">
+            {people
+              .filter((p) => !mineOnly || p.id === me)
+              .map((p) => (
+                <PersonSection
+                  key={p.id}
+                  person={p}
+                  items={items.filter((i) => i.assigned_to === p.id)}
+                  you={p.id === me}
+                  outstandingCount={outstanding.length}
+                  onMenu={() => setPersonId(p.id)}
+                  onOpenItem={(i) => setItemId(i.id)}
+                  onToggle={toggle}
+                  onAdd={() => openAdd(p.id)}
+                  dayTag={dayTag}
+                />
+              ))}
+          </div>
 
-      {/* Bottom-anchored primary action */}
-      <div className="bottom-safe fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-paper via-paper/95 to-transparent px-5 pt-6">
+          {mineOnly && outstanding.length > 0 && (
+            <button type="button" onClick={() => setMineOnly(false)} className="mt-6 text-[15px] font-semibold text-accent">
+              {outstanding.length} {outstanding.length === 1 ? "thing still needs" : "things still need"} someone &rarr;
+            </button>
+          )}
+
+          {!mineOnly && (
+            <button
+              type="button"
+              onClick={() => setAddingPerson(true)}
+              className="mt-8 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-[15px] font-semibold text-muted hover:border-accent hover:text-ink lg:hidden"
+            >
+              <PlusIcon className="size-4" /> Add someone who hasn&rsquo;t joined yet
+            </button>
+          )}
+        </main>
+      </div>
+
+      {/* Bottom-anchored primary action (phones; desktop has it in the sidebar) */}
+      <div className="bottom-safe fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-paper via-paper/95 to-transparent px-5 pt-6 lg:hidden">
         <div className="mx-auto max-w-xl">
           <Button onClick={() => openAdd()} disabled={offline} className="min-h-14 w-full text-[18px]">
             <PlusIcon /> Add items
@@ -366,7 +436,10 @@ function PersonSection({
 }) {
   const ready = items.filter((i) => i.is_checked).length;
   return (
-    <section className="mt-8">
+    <section
+      id={`person-${person.id}`}
+      className="mt-8 scroll-mt-24 lg:mt-0 lg:mb-6 lg:break-inside-avoid lg:rounded-3xl lg:border lg:border-line lg:bg-card lg:p-5"
+    >
       <div className="flex items-center gap-3">
         <Avatar name={person.display_name} you={you} />
         <div className="min-w-0 flex-1">
@@ -386,12 +459,12 @@ function PersonSection({
         </button>
       </div>
       {items.length > 0 && (
-        <div className="mt-2.5 pl-12">
+        <div className="mt-2.5 pl-12 lg:pl-0">
           <ProgressBar ready={ready} total={items.length} />
         </div>
       )}
       {items.length > 0 ? (
-        <ul className="mt-1 divide-y divide-line pl-12">
+        <ul className="mt-1 divide-y divide-line pl-12 lg:pl-0">
           {items.map((item) => (
             <ItemRow key={item.id} item={item} tag={dayTag(item)} onOpen={() => onOpenItem(item)}>
               <CheckButton item={item} canCheck={you} onToggle={() => onToggle(item)} />

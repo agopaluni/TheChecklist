@@ -26,7 +26,7 @@ export function MyEvents() {
   }, [auth.ready, auth.user]);
 
   return (
-    <section className="pb-6">
+    <section className="pb-6 lg:pb-0">
       <h2 className="mb-2 text-[13px] font-bold tracking-[0.12em] text-muted uppercase">
         Your events
       </h2>

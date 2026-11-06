@@ -115,7 +115,7 @@ export function AddItemsSheet({
     >
       {/* Who it's for */}
       <p className="text-[13px] font-bold tracking-[0.12em] text-muted uppercase">For</p>
-      <div className="scrollbar-none -mx-5 mt-2 flex gap-2 overflow-x-auto px-5 pb-1">
+      <div className="scrollbar-none -mx-5 mt-2 flex gap-2 overflow-x-auto px-5 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
         <Chip active={assignee === me} onClick={() => pickAssignee(me)}>
           Me
         </Chip>
@@ -144,7 +144,7 @@ export function AddItemsSheet({
       {days.length > 0 && (
         <>
           <p className="mt-4 text-[13px] font-bold tracking-[0.12em] text-muted uppercase">Which day</p>
-          <div className="scrollbar-none -mx-5 mt-2 flex gap-2 overflow-x-auto px-5 pb-1">
+          <div className="scrollbar-none -mx-5 mt-2 flex gap-2 overflow-x-auto px-5 pb-1 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
             <Chip active={!day} onClick={() => pickDay(null)}>
               Whole event
             </Chip>
