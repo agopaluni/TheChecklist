@@ -19,6 +19,12 @@ export default function Home() {
 
       <MyEvents />
 
+      <p className="pb-4 text-center text-[13px] text-muted">
+        <Link href="/privacy" className="hover:underline">Privacy</Link>
+        <span aria-hidden> · </span>
+        <Link href="/terms" className="hover:underline">Terms</Link>
+      </p>
+
       <div className="bottom-safe sticky bottom-0 mt-auto -mx-5 bg-gradient-to-t from-paper via-paper to-transparent px-5 pt-6">
         <Link
           href="/new"
