@@ -40,7 +40,10 @@ export function AddItemsSheet({
   const [listMode, setListMode] = useState(false);
   const [list, setList] = useState("");
   const [newPerson, setNewPerson] = useState(false);
-  const [added, setAdded] = useState<string[]>([]);
+  // What was added while the sheet is open, remembered per person and day, so the
+  // "Added 3 for Alexis" summary only ever lists Alexis's items for the chosen day.
+  const [added, setAdded] = useState<{ id: number; name: string; for: string | null; day: string | null }[]>([]);
+  const shown = added.filter((a) => a.for === assignee && a.day === day);
 
   const target = participants.find((p) => p.id === assignee);
 
@@ -58,7 +61,10 @@ export function AddItemsSheet({
 
   function add(newItems: NewItem[]) {
     if (newItems.length === 0) return;
-    setAdded((a) => [...newItems.map((i) => i.name).reverse(), ...a].slice(0, 30));
+    setAdded((a) => [
+      ...newItems.map((i) => ({ id: ++tempId, name: i.name, for: assignee, day })).reverse(),
+      ...a,
+    ]);
     const optimistic: Item[] = newItems.map((i) => ({
       id: `temp-${++tempId}`,
       name: i.name,
@@ -232,16 +238,16 @@ export function AddItemsSheet({
           </button>
         </div>
 
-        {added.length > 0 && (
+        {shown.length > 0 && (
           <div className="mt-4">
             <p className="text-sm font-semibold text-muted">
-              Added {added.length} for {targetLabel}
+              Added {shown.length} for {targetLabel}
               {day ? ` on ${formatDay(day)}` : ""}
             </p>
             <ul className="mt-1.5 flex flex-wrap gap-1.5">
-              {added.map((name, i) => (
-                <li key={`${name}-${i}`} className="animate-rise rounded-full bg-soft px-3 py-1 text-[14px]">
-                  {name}
+              {shown.slice(0, 30).map((a) => (
+                <li key={a.id} className="animate-rise rounded-full bg-soft px-3 py-1 text-[14px]">
+                  {a.name}
                 </li>
               ))}
             </ul>
