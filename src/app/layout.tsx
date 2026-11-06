@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import { ServiceWorker } from "@/components/ServiceWorker";
+import { forwardScript } from "@/lib/site";
 import "./globals.css";
 
 const heading = Bricolage_Grotesque({
@@ -36,6 +37,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${heading.variable} ${body.variable} antialiased`}>
+      <head>
+        {/* Old addresses forward to thechecklist.me, bringing the guest along. */}
+        <script dangerouslySetInnerHTML={{ __html: forwardScript }} />
+      </head>
       <body className="min-h-dvh">
         {children}
         <ServiceWorker />

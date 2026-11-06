@@ -12,6 +12,16 @@ export function deviceToken(): string {
   return token;
 }
 
+// Arriving from an old address: it put that browser's guest token in the #fragment.
+// Returns it once and removes it from the address bar.
+export function takeHandoffToken(): string | null {
+  const match = location.hash.match(/[#&]handoff=([^&]+)/);
+  if (!match) return null;
+  history.replaceState(history.state, "", location.pathname + location.search);
+  const old = decodeURIComponent(match[1]);
+  return /^[0-9a-f]{64}$/.test(old) ? old : null;
+}
+
 // Remembers who someone picked while they're away signing in with Google.
 const PENDING_KEY = "tc:pending-join";
 

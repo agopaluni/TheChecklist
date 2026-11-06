@@ -1,4 +1,4 @@
-import { deviceToken } from "./identity";
+import { deviceToken, takeHandoffToken } from "./identity";
 import { supabase } from "./supabase";
 import type { EventData, MyEvent, NewItem } from "./types";
 
@@ -32,7 +32,24 @@ export function isOfflineError(e: unknown) {
   return e instanceof ApiError && e.code === "offline";
 }
 
+// Before the first request: if we came from an old address, take over the people this
+// browser had claimed there, so nobody has to pick their name again.
+let handoff: Promise<unknown> | null = null;
+function finishHandoff(): Promise<unknown> {
+  handoff ??= (async () => {
+    const old = takeHandoffToken();
+    if (!old) return;
+    await supabase()
+      .rpc("adopt_guest_token", { p_old_token: old, p_token: deviceToken() })
+      .then(({ error }) => {
+        if (error) console.warn("Couldn't bring over your old guest spots", error.message);
+      });
+  })();
+  return handoff;
+}
+
 async function call<T>(fn: string, args: Record<string, unknown> = {}): Promise<T> {
+  await finishHandoff();
   const { data, error } = await supabase().rpc(fn, { ...args, p_token: deviceToken() });
   if (error) {
     // supabase-js reports network failures as a TypeError-ish message with no code

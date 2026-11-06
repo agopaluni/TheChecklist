@@ -223,6 +223,49 @@ test("a same-day end date means a single-day event", async () => {
   assert.equal(event.end_date, null);
 });
 
+test("moving address: a new device token takes over the old token's people", async () => {
+  const creator = token();
+  const { slug, event } = await newEvent(creator);
+  const oldToken = token();
+  const sarah = await rpc("join_as_new", { p_event: event.id, p_name: "Sarah", p_token: oldToken });
+  await rpc("add_items", { p_event: event.id, p_items: [{ name: "Ice" }], p_assign_to: sarah, p_token: oldToken });
+
+  // Same person on the new address, nobody yet in this event: the claim moves over.
+  const newToken = token();
+  assert.equal((await rpc("get_event", { p_slug: slug, p_token: newToken })).me, null);
+  assert.deepEqual(await rpc("adopt_guest_token", { p_old_token: oldToken, p_token: newToken }), {
+    moved: 1,
+    released: 0,
+  });
+  assert.equal((await rpc("get_event", { p_slug: slug, p_token: newToken })).me, sarah);
+  assert.equal((await rpc("get_event", { p_slug: slug, p_token: oldToken })).me, null);
+});
+
+test("moving address: if she already re-joined on the new address, the original spot wins", async () => {
+  const creator = token();
+  const { slug, event } = await newEvent(creator);
+  const oldToken = token();
+  const sarah = await rpc("join_as_new", { p_event: event.id, p_name: "Sarah", p_token: oldToken });
+  const newToken = token();
+  const dup = await rpc("join_as_new", { p_event: event.id, p_name: "Sarah K", p_token: newToken });
+  assert.deepEqual(await rpc("adopt_guest_token", { p_old_token: oldToken, p_token: newToken }), {
+    moved: 1,
+    released: 1,
+  });
+  const data = await rpc("get_event", { p_slug: slug, p_token: newToken });
+  assert.equal(data.me, sarah);
+  assert.equal(data.participants.find((p) => p.id === dup).is_claimed, false);
+});
+
+test("moving address: the event creator keeps their creator spot", async () => {
+  const oldToken = token();
+  const { slug, event, me: creatorSpot } = await newEvent(oldToken);
+  const newToken = token();
+  await rpc("join_as_new", { p_event: event.id, p_name: "Someone", p_token: newToken });
+  await rpc("adopt_guest_token", { p_old_token: oldToken, p_token: newToken });
+  assert.equal((await rpc("get_event", { p_slug: slug, p_token: newToken })).me, creatorSpot);
+});
+
 test("removing a person sends their items to Outstanding", async () => {
   const creator = token();
   const { event } = await newEvent(creator);
